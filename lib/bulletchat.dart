@@ -1,61 +1,79 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'bulletchat_data.dart';
 //import 'BarrageItem2.dart';
 import 'bulletchat_item.dart';
 
-typedef BarrageItemBuilder = Widget Function(BuildContext context, int index);
+typedef BulletItemBuilder = Widget Function(
+    BuildContext context, BulletChatData data);
+typedef SavageBulletItemBuilder = Widget Function(
+    BuildContext context, BulletChatData data);
 
 ///
 
 ///
 class BulletChat extends StatefulWidget {
   GlobalKey<BulletChatState> globalKey;
-  IndexedWidgetBuilder builder;
-//  bool startsWhenBuilt;
-  List<int> timeStampsInMill;
+
+  /// function to build all the widget
+  BulletItemBuilder builder;
+
+  ///
+  ///
+  /// timesstamps of all the bulletchat item in millisecond
+//  List<int> timeStampsInMill;
+
+  /// timesstamps of all the savagebulletchat item in millisecond
+
+  ///the bulletchat viewport width
   double width;
+
+  /// max lines to display
   int maxLine;
 
-  ///from 0 to 1
+  ///it decides speed of the animation from , should bigger than 0 and not bigger than 3
   double speedCoefficient;
 
   AvoidOption option;
 
-  ///from 0 to 1
-//  double width;
-//  double height;
-//  bool tryAvoidCollide;
-  BulletChat.builder(
-      {@required BarrageItemBuilder builder,
-        @required List<int> timeStampsInMill,
-        @required double width,
-        @required int maxLine,
-        @required GlobalKey<BulletChatState> globalKey,
-        @required AvoidOption option,
+  List<BulletChatData> data;
 
-        ///from 0 to 2,by default its 1,
-        @required double speedCoefficient = 1}
+  ///function to build savagebullet
+  SavageBulletItemBuilder savageBulletItemBuilder;
+  BulletChat.builder(
+      {@required BulletItemBuilder builder,
+//        @required List<int> timeStampsInMill,
+      @required double width,
+      @required int maxLine,
+      @required GlobalKey<BulletChatState> globalKey,
+      @required List<BulletChatData> data,
+      AvoidOption option = AvoidOption.AVOIDCOLLISION,
+      double speedCoefficient = 1,
+      List<int> savageBulletTimeStampInMill,
+      SavageBulletItemBuilder savageBulletItemBuilder}
 //      double width,
 //      double height
       )
       : assert(builder != null),
-        assert(timeStampsInMill != null),
+//        assert(timeStampsInMill != null),
         assert(speedCoefficient != null),
-        assert(speedCoefficient > 0&&speedCoefficient<=3),
+        assert(speedCoefficient > 0 && speedCoefficient <= 3),
         assert(globalKey != null),
         assert(width != null),
         assert(maxLine != null),
 
 //        assert(barrageController != null),
         this.builder = builder,
-        this.timeStampsInMill = timeStampsInMill,
+//        this.timeStampsInMill = timeStampsInMill,
         this.maxLine = maxLine,
         this.width = width,
         this.speedCoefficient = speedCoefficient,
-        this.option = option,
+//        this.option = AvoidOption.AVOIDCOLLISION,
+        this.savageBulletItemBuilder = savageBulletItemBuilder,
+        this.data = data,
         super(
-        key: globalKey,
-      );
+          key: globalKey,
+        );
 
 //        this.width = width,
 //        this.height = height;
@@ -75,18 +93,35 @@ class BulletChatState extends State<BulletChat> {
   Map<int, int> _rowIndex = Map();
   double _width = 0;
   double _height = 0;
-  int _savageCount = 0;
+  int _tempCount = 0;
   Map<int, int> _showTime = Map();
   Map<int, int> _finishTimeMap = Map();
-  bool _savage = false;
-  Widget _savageWidget;
+  bool _temp = false;
+  Widget _tempWidget;
   Timer _globalTimer;
   int _time;
+
+  List<BulletChatData> _normalData = List();
+  List<BulletChatData> _savageData = List();
+
+  int _savageIndex = 0;
+  int _savageTempCount = 0;
+  Widget _savageTempWidget;
+  BulletChatData _savageBulletChatData;
+  bool _savageTemp = false;
+
+  BulletChatData _bulletChatData;
+  BuildContext _context;
+
+  bool savageFinished = false;
+  bool normalFinished = false;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
+    initData();
     _screenTime =
         ((widget.width / 300) * 3000 / widget.speedCoefficient).toInt();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -95,19 +130,36 @@ class BulletChatState extends State<BulletChat> {
 //    start(0);
   }
 
+  void initData() {
+    for (int i = 0; i < widget.data.length; i++) {
+      if (widget.data[i].bulletType == BulletType.NORMAL) {
+        _normalData.add(widget.data[i]);
+      } else {
+        _savageData.add(widget.data[i]);
+      }
+    }
+    print("normal${_normalData.length}");
+    print("savage${_savageData.length}");
+  }
+
   @override
   Widget build(BuildContext context) {
+    _context = context;
     return _buildBody();
   }
 
+  /// if time is not 0, it will add 1500 millionseconds delayed to avoid collision from last time，
+  /// for example, you call method stop(),and then immediately call start()
   void start(int time) {
     _shouldProduce = true;
-    _clickClock(time==0?time:time+1500);
+    _clickClock(time == 0 ? time : time + 1500);
 
-    _produce(context, _savageWidget, false);
-    _isShowing =true;
+    _produce(context, _tempWidget, false);
+    if(widget.savageBulletItemBuilder!=null&&_savageData.length>0){
+      _produceSavageBullet(context, _savageTempWidget);
 
-
+    }
+    _isShowing = true;
   }
 
   void stop() {
@@ -118,124 +170,88 @@ class BulletChatState extends State<BulletChat> {
     _showTime.clear();
     _finishTimeMap.clear();
 
-
-
     setState(() {});
   }
 
-
   bool get isShowing => _isShowing;
-
-
-
-
-
-
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-
   }
+
   void _clickClock(int time) {
     this._time = time;
     final int t = time;
-    if(_findIndex(t)==-1){
+    if (_findIndex(t) == -1) {
       _shouldProduce = false;
-    }else{
+    } else {
       this._index = _findIndex(t);
       print("index${this._index}");
       _globalTimer = Timer.periodic(new Duration(milliseconds: 1), (t) {
         this._time++;
       });
     }
-
-
   }
 
-
-
-
-
-  int _findIndex(int t){
-
-    if(t==0){
+  ///find index of the item should be built next
+  int _findIndex(int t) {
+    if (t == 0) {
       return 0;
     }
 
-
-
-
-    if(t>widget.timeStampsInMill[widget.timeStampsInMill[widget.timeStampsInMill.length-1]]){
+    if (t > _normalData[_normalData.length - 1].timeFromStart) {
       return -1;
     }
-    int index =0;
+    int index1 = 0;
 
-    for(int i=0;i<widget.timeStampsInMill.length;i++){
-
-      if(widget.timeStampsInMill[i]<=t){
+    for (int i = 0; i < _normalData.length; i++) {
+      if (_normalData[i].timeFromStart <= t) {
         continue;
-      }else{
-        index =i;
+      } else {
+        index1 = i;
         break;
       }
-
     }
 
-    return index;
-
+    return index1;
   }
-
-
-
-
-
 
   Widget _buildBody() {
-    return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints boxConstraints) {
+    return
+      Material(
+        child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints boxConstraints) {
+              var boxConstraint = boxConstraints;
+              double height = boxConstraint.maxHeight;
+              double width = boxConstraint.maxWidth;
 
-          var boxConstraint = boxConstraints;
-          double height = boxConstraint.maxHeight;
-          double width = boxConstraint.maxWidth;
+              this._width = width;
+              this._height = height;
 
+              return Container(
+                width: width,
+                height: height,
+                child: Container(
+                    width: _shouldProduce ? width : 0,
+                    height: height,
+                    child: Stack(
+                      children: _list,
+                    )),
+              );
+            }),
 
-          this._width = width;
-          this._height = height;
-
-          return
-
-
-            Container(
-              width: width,
-              height: height,
-              child:
-
-              Container(
-
-                  width: _shouldProduce?width:0,
-                  height: height,
-                  child:Stack(
-                    children: _list,
-                  )
-
-              )
-              ,
-
-
-            );
-
-
-        });
+      )
+      ;
   }
 
-
-
   _produce(BuildContext context, Widget child, bool temp) {
+    if(_index==_normalData.length-1){
+      normalFinished = true;
+    }
     if (_shouldProduce) {
-      _durationTime = widget.timeStampsInMill[_index];
-
+      _durationTime = _normalData[_index].timeFromStart;
 
       Future.delayed(Duration(milliseconds: (_durationTime - _time).abs()), () {
         int row;
@@ -249,21 +265,21 @@ class BulletChatState extends State<BulletChat> {
 
 //          int finishTime  = finishTimeMap[row];
         GlobalKey<BulletChatItemState> key = GlobalKey();
-        Widget childWidget = temp
-            ? child
-            : widget.builder(
-            context, _index - _savageCount > 0 ? _index - _savageCount : 0);
+        Widget childWidget =
+            temp ? child : widget.builder(context, _normalData[_index]);
 
         _list.add(BulletChatItem(
           child: childWidget,
-          marginTop: this._height/widget.maxLine * _rowIndex[_index].toDouble(),
+          marginTop:
+              this._height / widget.maxLine * _rowIndex[_index].toDouble(),
           globalKey: key,
           rowNum: _rowIndex[_index],
           callBack: setFinishTime,
           startTime: _time,
           screenTime: _screenTime,
-          lastShowTime:
-          _showTime[_rowIndex[_index]] == null ? 0 : _showTime[_rowIndex[_index]],
+          lastShowTime: _showTime[_rowIndex[_index]] == null
+              ? 0
+              : _showTime[_rowIndex[_index]],
           lastFinishTime: _finishTimeMap[_rowIndex[_index]] == null
               ? 0
               : _finishTimeMap[_rowIndex[_index]],
@@ -272,7 +288,7 @@ class BulletChatState extends State<BulletChat> {
           showTimeCall: setLastShowTime,
           index: _index,
           removable: !temp,
-          option: widget.option,
+          option: AvoidOption.AVOIDCOLLISION,
         ));
 
         setState(() {});
@@ -280,46 +296,92 @@ class BulletChatState extends State<BulletChat> {
     }
   }
 
+  _produceSavageBullet(
+    BuildContext context,
+    Widget child,
+    /// if center in the widget
+  ) {
+    Widget child1;
+    if (_savageTemp) {
+      _savageTempCount++;
+      _savageData.insert(_savageIndex, _savageBulletChatData);
+      child1 = _savageTempWidget;
+    }
+     print("savageindex$_savageIndex");
+    Future.delayed(
+        Duration(milliseconds: _savageData[_savageIndex].timeFromStart - _time),
+        () {
+      _addSavageBullet(
+          context: context,
+          child: child1 == null
+              ? widget.savageBulletItemBuilder(context, _savageData[_savageIndex])
+              : child1,
+          durationInMill: _savageData[_savageIndex].duration,
+          margin: _savageData[_savageIndex].margin,
+          center: _savageData[_savageIndex].center);
+      _savageIndex++;
+      _savageTemp = false;
+      if(_savageIndex<_savageData.length){
+        _produceSavageBullet(context, child);
+      }else{
+        savageFinished = true;
+      }
+    });
+
+
+
+  }
 
   void setLastShowTime(int row, int startTime) {
     _showTime[row] = startTime;
   }
 
+  /// it should be called when the viewport size changed but screen orientation not changed
+  /// if the screen orientation changed , should not call this
+  void onSizeChanged({double width,double height}){
 
+    widget.width = width;
+     this._height = height;
+    _screenTime =
+        ((widget.width / 300) * 3000 / widget.speedCoefficient).toInt();
+  }
 
-
-  void setFinishTime(int row, int startTime, int index) {
+  void setFinishTime(int row, int startTime, int index1) {
     _finishTimeMap[row] = startTime;
 //    this.callBackIndex = index;
 
-    if (index < widget.timeStampsInMill.length - 1) {
+    if (index1 < _normalData.length - 1) {
 //            while(true){
 //              if(callBackIndex==index){
 
       this._index++;
 //                while(true){
 //                  if(shouldcontinue){
-      if (_savage) {
-        print("temp");
-        _savageCount++;
-        int lastTime =
-        index - 1 >= 0 ? widget.timeStampsInMill[this._index - 1] : 0;
+      if (_temp) {
+        if (this._bulletChatData.bulletType == BulletType.NORMAL) {
+          print("temp");
+          _tempCount++;
+          int lastTime =
+              index1 - 1 >= 0 ? _normalData[this._index - 1].timeFromStart : 0;
 
-        print("time$lastTime");
-        widget.timeStampsInMill.insert(this._index, lastTime);
-        _produce(context, _savageWidget, true);
-        _savage = false;
+          print("time$lastTime");
+//        _normalData.insert(this._index, lastTime);
+          this._bulletChatData.timeFromStart = lastTime;
+          _normalData.insert(this._index, this._bulletChatData);
+          _produce(context, _tempWidget, true);
+          _temp = false;
+        } else {}
       } else {
-        _produce(context, _savageWidget, false);
+        _produce(context, _tempWidget, false);
       }
     }
   }
-
 
   void _clearData() {
     _list.removeWhere((element) => element.finished);
   }
 
+  /// find which row is available
   int _availableRow(int index) {
 //    print("index${index}");
     int temp = 100000000;
@@ -337,14 +399,17 @@ class BulletChatState extends State<BulletChat> {
     return row;
   }
 
+  /// add an item without animation from right to left ,
+  /// [durationInMill] ,how long should the item be showing
 
-
-  addSavageBarrage(
+  _addSavageBullet(
       {BuildContext context,
-        Widget child,
-        int durationInMill,
-        EdgeInsets margin,
-        bool center}) {
+      Widget child,
+      int durationInMill,
+      EdgeInsets margin,
+
+      /// if center in the widget
+      bool center}) {
     //创建一个OverlayEntry对象
     OverlayEntry overlayEntry = new OverlayEntry(builder: (context) {
       //外层使用Positioned进行定位，控制在Overlay中的位置
@@ -391,10 +456,46 @@ class BulletChatState extends State<BulletChat> {
     });
   }
 
-  addBarrage(Widget child) {
-    _savageWidget = child;
-    _savage = true;
+  addBullet(Widget child, BulletChatData bulletChatData) {
+    if(!normalFinished){
+
+      _tempWidget = child;
+      this._bulletChatData = bulletChatData;
+      _temp = true;
+
+
+    }else{
+
+      _tempCount++;
+      int lastTime =
+      this._index - 1 >= 0 ? _normalData[this._index - 1].timeFromStart : 0;
+
+      print("time$lastTime");
+//        _normalData.insert(this._index, lastTime);
+      this._bulletChatData.timeFromStart = lastTime;
+      _normalData.insert(this._index, this._bulletChatData);
+      _produce(context, _tempWidget, true);
+      _temp = false;
+
+    }
+
+  }
+
+  addSavageBullet(Widget child, BulletChatData bulletChatData) {
+    if(widget.savageBulletItemBuilder!=null){
+      _savageTempWidget = child;
+      this._savageBulletChatData = bulletChatData;
+      this._savageTemp = true;
+    }
+
+    if(widget.savageBulletItemBuilder==null||savageFinished){
+
+      _addSavageBullet(context: _context,child: child,durationInMill: bulletChatData.duration,margin: bulletChatData.margin,center: bulletChatData.center);
+
+    }
+
+
   }
 }
 
-enum AvoidOption { AVOIDCOLLISION,  ALLOWCOLLISION }
+enum AvoidOption { AVOIDCOLLISION, ALLOWCOLLISION }
