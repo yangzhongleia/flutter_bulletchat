@@ -156,8 +156,8 @@ class BulletChatItemState extends State<BulletChatItem>
     if (widget.index == 0) {
 //      Fluttertoast.showToast(msg: null)
     }
-    print("》》》${widget.index} ${extraTime}");
-    print("》》》${widget.index} ${extra}");
+//    print("》》》${widget.index} ${extraTime}");
+//    print("》》》${widget.index} ${extra}");
 //    print("extratime>>>${extraTime}");
     duration = Duration(milliseconds: widget.screenTime + extraTime);
 //    print("comparetime>>>>${compareTime()}");
@@ -173,7 +173,7 @@ class BulletChatItemState extends State<BulletChatItem>
 //        return t;
 //        return t;
 
-        print("<1/2");
+//        print("<1/2");
 //        firstDuration = firstDuration-t;
 //        visible = true;
 //        shouldReder = true;
@@ -357,7 +357,7 @@ class BulletChatItemState extends State<BulletChatItem>
   getWidth(var width) {
     this.width = -width;
     firstDuration = widthToDuration();
-    print("durationtime${firstDuration}");
+//    print("durationtime${firstDuration}");
     durationTime = time();
     if (count == 0 && shouldReder) {
 
