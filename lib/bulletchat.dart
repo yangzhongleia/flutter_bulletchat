@@ -264,6 +264,7 @@ class BulletChatState extends State<BulletChat> {
         );
   }
 
+
   _produce(BuildContext context, Widget child, bool temp) {
     if (_index == _normalData.length - 1) {
       normalFinished = true;
@@ -509,46 +510,56 @@ class BulletChatState extends State<BulletChat> {
 
   handle(){
 
-    Timer.periodic(Duration(milliseconds: 1000), (timer) {
-
-      if(_child!=null){
-        _child.removeWhere((element) {
-//      if(element.finished){
-//        return element.finished;
+//    Timer.periodic(Duration(milliseconds: 1000), (timer) {
+//
+//      if(_child!=null){
+//        _child.removeWhere((element) {
+////      if(element.finished){
+////        return element.finished;
+////      }
+//          if(_time-element.startTime>=element.time){
+//            return true;
+//          }
+//
+//
+//
+//        });
+//
 //      }
-          if(_time-element.startTime>=element.time){
-            return true;
-          }
-
-
-
-        });
-
-      }
-
-
-    });
+//
+//
+//    });
 
   }
 
   void remove(int index) {
 //    _child.removeAt(0);
+
+//  _child.removeWhere((element) => _child.indexOf(element)==0);
     _child.removeWhere((element) {
 //      if(element.finished){
-//        return element.finished;
+
+
+//        if(element.finished){
+//          print("finishe${element.finished}${_child.indexOf(element)}");
+//        }
+        if(!element.finished){
+          print("unfinishe${element.finished}${element.index}");
+        }
+
 //      }
       if(_time-element.startTime>=element.time){
         return true;
       }
-
+      return element.finished;
 
 
     });
-
-    for(SavageWidget savageWidget in _child){
-//      print("index ${savageWidget.index}");
-
-    }
+//
+//    for(SavageWidget savageWidget in _child){
+////      print("index ${savageWidget.index}");
+//
+//    }
     setState(() {});
   }
 
@@ -612,7 +623,9 @@ class _SavageWidgetState extends State<SavageWidget> {
   @override
   void initState() {
 
-    print("index>${widget.index}");
+//    print("index>${widget.index}");
+//    print("time>${widget.time}");
+//    print("starttime>${widget.startTime}");
 
 
 
@@ -626,7 +639,7 @@ class _SavageWidgetState extends State<SavageWidget> {
 //        });
 
         print("index${widget.index}");
-//        widget.function(widget.index);
+        widget.function(widget.index);
 
       });
 
@@ -661,6 +674,7 @@ class _SavageWidgetState extends State<SavageWidget> {
         double width = box.maxWidth;
         double height = box.maxHeight;
         return Container(
+          color: Colors.transparent,
           width: width,
           height: height,
           alignment: Alignment.center,

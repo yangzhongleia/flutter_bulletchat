@@ -1,6 +1,6 @@
-# flutterbulletchat
+# flutter_bulletchat
 
-A new Flutter package.
+A flutter version bulletchat like danmaku, barrage. Its easy to use; It supports animation and static bulletchat, setting speed of the animation.
 
 ## Getting Started
 

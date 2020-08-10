@@ -1,8 +1,9 @@
-name: flutter_bulletchat
+name: yzl_flutter_bulletchat
 description: A flutter version bulletchat like danmaku, barrage. Its easy to use; It supports animation and static bulletchat, setting speed of the animation.
-version: 0.0.2
+version: 0.0.1
 #author: Zhonglei Yang
 homepage: https://github.com/yangzhongleia/flutter_bulletchat.git
+#homepage: https://www.baidu.com
 #url:
 environment:
   sdk: ">=2.7.0 <3.0.0"
