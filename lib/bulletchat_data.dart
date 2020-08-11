@@ -12,6 +12,7 @@ class BulletChatData{
   /// if center in the widget
   bool center;
 
+  ///the content
   Object content;
   BulletChatData(this.content,this.bulletType,this.timeFromStart,{this.duration,this.margin,this.center});
 

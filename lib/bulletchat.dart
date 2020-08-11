@@ -133,7 +133,7 @@ class BulletChatState extends State<BulletChat> {
         ((this._width / 300) * 3000 / widget.speedCoefficient).toInt();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       start(0);
-      handle();
+//      handle();
     });
 //    start(0);
   }
@@ -508,30 +508,8 @@ class BulletChatState extends State<BulletChat> {
     }
   }
 
-  handle(){
 
-//    Timer.periodic(Duration(milliseconds: 1000), (timer) {
-//
-//      if(_child!=null){
-//        _child.removeWhere((element) {
-////      if(element.finished){
-////        return element.finished;
-////      }
-//          if(_time-element.startTime>=element.time){
-//            return true;
-//          }
-//
-//
-//
-//        });
-//
-//      }
-//
-//
-//    });
-
-  }
-
+  ///clear data
   void remove(int index) {
 //    _child.removeAt(0);
 
