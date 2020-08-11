@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'bulletchat_data.dart';
-//import 'BarrageItem2.dart';
-import 'bulletchat_item.dart';
+
 
 typedef BulletItemBuilder = Widget Function(
     BuildContext context, BulletChatData data);
-typedef SavageBulletItemBuilder = Widget Function(
+typedef StaticBulletItemBuilder = Widget Function(
     BuildContext context, BulletChatData data);
 
 ///
@@ -24,7 +22,7 @@ class BulletChat extends StatefulWidget {
   /// timesstamps of all the bulletchat item in millisecond
 //  List<int> timeStampsInMill;
 
-  /// timesstamps of all the savagebulletchat item in millisecond
+  /// timesstamps of all the staticbulletchat item in millisecond
 
   ///the bulletchat viewport width
   double width;
@@ -41,8 +39,8 @@ class BulletChat extends StatefulWidget {
 
   List<BulletChatData> data;
 
-  ///function to build savagebullet
-  SavageBulletItemBuilder savageBulletItemBuilder;
+  ///function to build staticbullet
+  StaticBulletItemBuilder staticBulletItemBuilder;
   BulletChat.builder(
       {@required BulletItemBuilder builder,
 //        @required List<int> timeStampsInMill,
@@ -53,8 +51,8 @@ class BulletChat extends StatefulWidget {
       @required List<BulletChatData> data,
       AvoidOption option = AvoidOption.AVOIDCOLLISION,
       double speedCoefficient = 1,
-      List<int> savageBulletTimeStampInMill,
-      SavageBulletItemBuilder savageBulletItemBuilder}
+      List<int> staticBulletTimeStampInMill,
+      StaticBulletItemBuilder staticBulletItemBuilder}
 //      double width,
 //      double height
       )
@@ -75,7 +73,7 @@ class BulletChat extends StatefulWidget {
         this.height = height,
         this.speedCoefficient = speedCoefficient,
 //        this.option = AvoidOption.AVOIDCOLLISION,
-        this.savageBulletItemBuilder = savageBulletItemBuilder,
+        this.staticBulletItemBuilder = staticBulletItemBuilder,
         this.data = data,
         super(
           key: globalKey,
@@ -108,21 +106,20 @@ class BulletChatState extends State<BulletChat> {
   int _time;
 
   List<BulletChatData> _normalData = List();
-  List<BulletChatData> _savageData = List();
+  List<BulletChatData> _staticData = List();
 
-  int _savageIndex = 0;
-  int _savageTempCount = 0;
-  Widget _savageTempWidget;
-  BulletChatData _savageBulletChatData;
-  bool _savageTemp = false;
+  int _staticIndex = 0;
+
+  Widget _staticTempWidget;
+
 
   BulletChatData _bulletChatData;
   BuildContext _context;
 
-  bool savageFinished = false;
+  bool staticFinished = false;
   bool normalFinished = false;
 
-  List<SavageWidget> _child = List();
+  List<StaticWidget> _child = List();
   @override
   void initState() {
     // TODO: implement initState
@@ -143,14 +140,14 @@ class BulletChatState extends State<BulletChat> {
       if (widget.data[i].bulletType == BulletType.NORMAL) {
         _normalData.add(widget.data[i]);
       } else {
-        _savageData.add(widget.data[i]);
+        _staticData.add(widget.data[i]);
       }
     }
 
     this._width = widget.width;
     this._height = widget.height;
 //    print("normal${_normalData.length}");
-//    print("savage${_savageData.length}");
+//    print("static${_staticData.length}");
   }
 
   @override
@@ -166,8 +163,8 @@ class BulletChatState extends State<BulletChat> {
     _clickClock(time == 0 ? time : time + 1500);
 
     _produce(context, _tempWidget, false);
-    if (widget.savageBulletItemBuilder != null && _savageData.length > 0) {
-      _produceSavageBullet(context, _savageTempWidget);
+    if (widget.staticBulletItemBuilder != null && _staticData.length > 0) {
+      _produceStaticBullet(context, _staticTempWidget);
     }
     _isShowing = true;
   }
@@ -315,43 +312,43 @@ class BulletChatState extends State<BulletChat> {
     }
   }
 
-  _produceSavageBullet(
+  _produceStaticBullet(
     BuildContext context,
     Widget child,
 
     /// if center in the widget
   ) {
 //    Widget child1;
-//    if (_savageTemp) {
-//      _savageTempCount++;
-//      _savageData.insert(_savageIndex, _savageBulletChatData);
-//      child1 = _savageTempWidget;
+//    if (_staticTemp) {
+//      _staticTempCount++;
+//      _staticData.insert(_staticIndex, _staticBulletChatData);
+//      child1 = _staticTempWidget;
 //    }
-//    print("savageindex$_savageIndex");
+//    print("staticindex$_staticIndex");
 
     if (_shouldProduce) {
       Future.delayed(
           Duration(
               milliseconds:
-                  (_savageData[_savageIndex].timeFromStart - _time).abs()), () {
-        _addSavageBullet(
+                  (_staticData[_staticIndex].timeFromStart - _time).abs()), () {
+        _addStaticBullet(
             context: context,
 //          child: child1 == null
-//              ? widget.savageBulletItemBuilder(
-//                  context, _savageData[_savageIndex])
+//              ? widget.staticBulletItemBuilder(
+//                  context, _staticData[_staticIndex])
 //              : child1,
-            child: widget.savageBulletItemBuilder(
-                context, _savageData[_savageIndex]),
-            durationInMill: _savageData[_savageIndex].duration,
-            margin: _savageData[_savageIndex].margin,
-            center: _savageData[_savageIndex].center,
-            index: _savageIndex);
-        _savageIndex++;
+            child: widget.staticBulletItemBuilder(
+                context, _staticData[_staticIndex]),
+            durationInMill: _staticData[_staticIndex].duration,
+            margin: _staticData[_staticIndex].margin,
+            center: _staticData[_staticIndex].center,
+            index: _staticIndex);
+        _staticIndex++;
 
-        if (_savageIndex < _savageData.length) {
-          _produceSavageBullet(context, child);
+        if (_staticIndex < _staticData.length) {
+          _produceStaticBullet(context, child);
         } else {
-          savageFinished = true;
+          staticFinished = true;
         }
       });
     }
@@ -426,7 +423,7 @@ class BulletChatState extends State<BulletChat> {
   /// add an item without animation from right to left ,
   /// [durationInMill] ,how long should the item be showing
 
-  _addSavageBullet(
+  _addStaticBullet(
       {BuildContext context,
       Widget child,
       int durationInMill,
@@ -480,7 +477,7 @@ class BulletChatState extends State<BulletChat> {
 //      overlayEntry.remove();
 //    });
 
-    _child.add(SavageWidget(
+    _child.add(StaticWidget(
         durationInMill, child, center, margin, remove, _time, index));
     setState(() {});
   }
@@ -533,54 +530,35 @@ class BulletChatState extends State<BulletChat> {
 
 
     });
-//
-//    for(SavageWidget savageWidget in _child){
-////      print("index ${savageWidget.index}");
-//
-//    }
+
     setState(() {});
   }
 
-  addSavageBullet(
+  addStaticBullet(
       {Widget child, int duration, EdgeInsets margin, @required bool center}) {
-    BulletChatData bulletChatData = BulletChatData("", BulletType.SAVAGE, _time,
+    BulletChatData bulletChatData = BulletChatData("", BulletType.STATIC, _time,
         duration: duration,
         margin: margin == null ? EdgeInsets.only(left: 0) : margin,
         center: center);
-//    if (widget.savageBulletItemBuilder != null && !savageFinished) {
-    print(">>>>>>>>>savagebullet");
 
-//      _savageTempWidget = child;
-//      this._savageBulletChatData = bulletChatData;
-//      this._savageTemp = true;
-//      _savageData.insert(_savageIndex+1, bulletChatData);
-//      _produceSavageBullet(context, child);
-//      _savageTemp = false;
 
-    _addSavageBullet(
+    _addStaticBullet(
         context: _context,
         child: child,
         durationInMill: bulletChatData.duration,
         margin: bulletChatData.margin,
         center: bulletChatData.center,
-        index: _savageIndex);
+        index: _staticIndex);
 
 //    }
 
-//    if (widget.savageBulletItemBuilder == null || savageFinished) {
-//      _addSavageBullet(
-//          context: _context,
-//          child: child,
-//          durationInMill: bulletChatData.duration,
-//          margin: bulletChatData.margin,
-//          center: bulletChatData.center);
-//    }
+
   }
 }
 
 enum AvoidOption { AVOIDCOLLISION, ALLOWCOLLISION }
 
-class SavageWidget extends StatefulWidget {
+class StaticWidget extends StatefulWidget {
   int index;
   int time;
   Widget child;
@@ -589,14 +567,14 @@ class SavageWidget extends StatefulWidget {
   Function function;
   bool finished = false;
   int startTime;
-  SavageWidget(this.time, this.child, this.center, this.margin, this.function,
+  StaticWidget(this.time, this.child, this.center, this.margin, this.function,
       this.startTime, this.index);
 
   @override
-  _SavageWidgetState createState() => _SavageWidgetState();
+  _StaticWidgetState createState() => _StaticWidgetState();
 }
 
-class _SavageWidgetState extends State<SavageWidget> {
+class _StaticWidgetState extends State<StaticWidget> {
   double opacity =1;
   @override
   void initState() {
@@ -670,5 +648,445 @@ class _SavageWidgetState extends State<SavageWidget> {
           child: widget.child)
       ;
     }
+  }
+}
+
+
+class BulletChatData{
+
+  BulletType bulletType;
+  ///its essential
+  int timeFromStart;
+  ///if bulletType is BulletType.Static,its essential
+  int duration;
+  //if bulletType is BulletType.Static,and center is false ,its essential
+  EdgeInsets margin;
+  //if bulletType is BulletType.Static,its essential
+  /// if center in the widget
+  bool center;
+
+  ///the content
+  Object content;
+  BulletChatData(this.content,this.bulletType,this.timeFromStart,{this.duration,this.margin,this.center});
+
+}
+
+enum BulletType{
+
+  NORMAL,
+  STATIC
+}
+
+class BulletChatItem extends StatefulWidget {
+  bool finished = false;
+  Widget child;
+  int rowNum;
+  GlobalKey<BulletChatItemState> globalKey;
+  double marginTop;
+  Function callBack;
+  int startTime;
+  int lastFinishTime;
+  int lastShowTime;
+  int screenTime;
+  double width;
+  bool forceToAvoid;
+  Function showTimeCall;
+  int index;
+  bool removable;
+  AvoidOption option;
+  BulletChatItem(
+      {this.child,
+        this.marginTop,
+        this.globalKey,
+        this.rowNum,
+        this.callBack,
+        this.startTime,
+        this.lastFinishTime,
+        this.screenTime,
+        this.forceToAvoid,
+        this.width,
+        this.lastShowTime,
+        this.showTimeCall,
+        this.index,
+        this.removable,
+        this.option
+      })
+      : super(key: globalKey);
+  @override
+  BulletChatItemState createState() => BulletChatItemState();
+}
+
+class BulletChatItemState extends State<BulletChatItem>
+    with TickerProviderStateMixin {
+//  Animation<double> animation;
+  Animation<Offset> animation;
+
+  ///360三秒为基准
+  ///
+  ///
+  double width;
+  AnimationController controller;
+//
+  Animation<EdgeInsets> movement;
+
+  int startTime;
+//  AnimationController xAnimationController;
+  AnimateChild animateChild;
+//  GlobalKey<AnimateChildState> globalKey;
+
+  Duration duration;
+
+  bool visible = true;
+  @override
+  initState() {
+    super.initState();
+
+
+//    globalKey = GlobalKey();
+    animateChild = AnimateChild(getWidth, widget.child);
+
+    delayTime = 0;
+    firstDuration =0;
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {});
+  }
+
+  @override
+  void dispose() {
+//    controller.dispose();
+    // TODO: implement dispose
+
+
+    super.dispose();
+//    print("dispose ${widget.index}");
+  }
+
+  bool anima = false;
+  int count = 0;
+  bool shouldReder = true;
+  @override
+  Widget build(BuildContext context) {
+    return body2(context);
+  }
+
+  Widget body2(BuildContext context) {
+    if (width == null) {
+      return Positioned(
+        child: animateChild,
+        left: 15000,
+        top: widget.marginTop,
+      );
+    } else {
+      if (!anima) {
+        count++;
+        if (widget.startTime != null) {}
+        controller = AnimationController(
+            duration: Duration(milliseconds: durationTime), vsync: this);
+        controller.addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+//         dispose();
+
+//          widget.finished = true;
+            if (mounted) dispose();
+          }
+        });
+        movement = EdgeInsetsTween(
+          begin: EdgeInsets.only(
+            top: widget.marginTop,
+            left: MediaQuery.of(context).size.width,
+          ),
+          end: EdgeInsets.only(top: widget.marginTop, left: width),
+        ).animate(controller)
+          ..addListener(() {
+            setState(() {});
+          });
+        if (delayTime > 0) {
+          Future.delayed(Duration(milliseconds: delayTime), () {
+            controller.forward();
+          });
+        } else {
+          controller.forward();
+        }
+      }
+
+      anima = true;
+
+//      print("showtime${showTime()}");
+      return Visibility(
+          visible: true,
+          child: Positioned(
+            child: animateChild,
+            left: movement.value.left,
+            top: widget.marginTop,
+          ));
+    }
+  }
+
+
+  int durationTime = 0;
+  int rstartTime = 0;
+  int firstDuration = 0;
+  int time() {
+    rstartTime = widget.startTime;
+    double extra = (-width ) / widget.width;
+    int extraTime = (widget.screenTime * extra).toInt();
+    if (widget.index == 0) {
+//      Fluttertoast.showToast(msg: null)
+    }
+//    print("》》》${widget.index} ${extraTime}");
+//    print("》》》${widget.index} ${extra}");
+//    print("extratime>>>${extraTime}");
+    duration = Duration(milliseconds: widget.screenTime + extraTime);
+//    print("comparetime>>>>${compareTime()}");
+    return widget.screenTime + extraTime - compareTime();
+  }
+
+  int delayTime = 0;
+  int compareTime() {
+    if (arriveLeftTime1() < widget.lastFinishTime) {
+      int t = widget.lastFinishTime - arriveLeftTime1();
+//      print("arriveleft${arriveLeftTime()}");
+      if (t < firstDuration / 2) {
+//        return t;
+//        return t;
+
+//        print("<1/2");
+//        firstDuration = firstDuration-t;
+//        visible = true;
+//        shouldReder = true;
+
+        if (widget.option==AvoidOption.AVOIDCOLLISION) {
+
+//          print("showtime${showTime()}");
+          if(mounted){
+
+            if (widget.removable) {
+
+              visible = false;
+              widget.callBack(widget.rowNum, widget.lastFinishTime, widget.index);
+              widget.showTimeCall(widget.rowNum, widget.lastShowTime);
+              shouldReder = false;
+
+              dispose();
+//            visible = true;
+//            shouldReder = true;
+//            return t;
+            }else {
+              return   0;
+            }
+
+          }
+
+        }else{
+          visible = true;
+          shouldReder = true;
+          return 0;
+        }
+      } else {
+        if (widget.option==AvoidOption.AVOIDCOLLISION) {
+
+//          print("showtime${showTime()}");
+          if(mounted){
+            if(widget.removable){
+              visible = false;
+              widget.callBack(widget.rowNum, widget.lastFinishTime, widget.index);
+              widget.showTimeCall(widget.rowNum, widget.lastShowTime);
+
+              shouldReder = false;
+              dispose();
+            }else{
+              return  0;
+            }
+          }
+
+        }else{
+          return 0;
+        }
+
+//        dispose();
+//        delayTime = t-(widget.screenTime/2).toInt();
+//        rstartTime = rstartTime-delayTime;
+//        return (widget.screenTime/2).toInt();
+
+        return 0;
+      }
+      return 0;
+    }else{
+      return 0;
+    }
+//     if (widget.lastShowTime > widget.startTime) {
+//      visible = false;
+//
+//      widget.callBack(widget.rowNum, widget.lastFinishTime, widget.index);
+//      widget.showTimeCall(widget.rowNum, widget.lastShowTime);
+////      print("showtime${showTime()}");
+//      shouldReder = false;
+//      if (mounted)
+//        {
+//          if(widget.removable){
+//            dispose();
+//          }else{
+//
+//          }
+//
+//          return 0;
+//        }
+//    } else {
+//      return 0;
+//    }
+  }
+
+  int compareTime1() {
+    if (arriveLeftTime1() < widget.lastFinishTime) {
+      int t = widget.lastFinishTime - arriveLeftTime1();
+//      print("arriveleft${arriveLeftTime()}");
+      if (t < firstDuration / 2) {
+//        return t;
+//        return t;
+        if (widget.option==AvoidOption.AVOIDCOLLISION) {
+          visible = false;
+          widget.callBack(widget.rowNum, widget.lastFinishTime, widget.index);
+          widget.showTimeCall(widget.rowNum, widget.lastShowTime);
+          shouldReder = false;
+//          print("showtime${showTime()}");
+          if(mounted){
+
+            if (widget.removable) {
+              dispose();
+            }else {
+
+            }
+
+          }
+
+        }
+      } else {
+        if (widget.option==AvoidOption.AVOIDCOLLISION) {
+          visible = false;
+          widget.callBack(widget.rowNum, widget.lastFinishTime, widget.index);
+          widget.showTimeCall(widget.rowNum, widget.lastShowTime);
+
+          shouldReder = false;
+//          print("showtime${showTime()}");
+          if(mounted){
+            if(widget.removable){
+              dispose();
+            }else{
+
+            }
+          }
+
+        }
+
+//        dispose();
+//        delayTime = t-(widget.screenTime/2).toInt();
+//        rstartTime = rstartTime-delayTime;
+//        return (widget.screenTime/2).toInt();
+
+        return 0;
+      }
+      return 0;
+    }
+    if (widget.lastShowTime > widget.startTime) {
+      visible = false;
+
+      widget.callBack(widget.rowNum, widget.lastFinishTime, widget.index);
+      widget.showTimeCall(widget.rowNum, widget.lastShowTime);
+//      print("showtime${showTime()}");
+      shouldReder = false;
+      if (mounted)
+      {
+        if(widget.removable){
+          dispose();
+        }else{
+
+        }
+
+        return 0;
+      }
+    } else {
+      return 0;
+    }
+  }
+  int widthToDuration(){
+    return widget.screenTime+(((-width)/widget.width)*widget.screenTime).toInt();
+  }
+
+
+
+  int showTime() {
+    return widget.startTime +
+        (((-width) / widget.width) * widget.screenTime).toInt();
+  }
+
+  int arriveLeftTime() {
+
+    return (widget.startTime +
+        widget.screenTime +
+        ((-width) / widget.width) * widget.screenTime)
+        .toInt();
+  }
+  int arriveLeftTime1() {
+
+    return widget.startTime+widget.screenTime;
+  }
+
+  getWidth(var width) {
+    this.width = -width;
+    firstDuration = widthToDuration();
+//    print("durationtime${firstDuration}");
+    durationTime = time();
+    if (count == 0 && shouldReder) {
+
+      widget.showTimeCall(widget.rowNum, showTime());
+      widget.callBack(widget.rowNum, widget.startTime + firstDuration, widget.index);
+
+//      print("callBack${widget.startTime}");
+
+    }
+
+    if (shouldReder) setState(() {});
+  }
+}
+class AnimateChild extends StatefulWidget {
+  Function function;
+
+  Widget child;
+
+  AnimateChild(this.function,this.child);
+  @override
+  AnimateChildState createState() => AnimateChildState();
+}
+
+class AnimateChildState extends State<AnimateChild> {
+//  GlobalKey _key = GlobalKey();
+
+  GlobalKey<AnimateChildState> globalKey = GlobalKey();
+
+  _getRenderBox(_) {
+//    print("renderer");
+    //获取`RenderBox`对象
+    RenderBox renderBox =  globalKey.currentContext.findRenderObject();
+    widget.function(renderBox.size.width);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    WidgetsBinding.instance.addPostFrameCallback(_getRenderBox);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key:  globalKey,
+//      child: Text("11"),
+      child: widget.child,
+    );
+  }
+
+  sendWidth(){
+    RenderBox renderBox = globalKey.currentContext.findRenderObject();
+    widget.function(renderBox.size.width);
   }
 }
